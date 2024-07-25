@@ -23,9 +23,9 @@ const pages = {
     "start": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0000.png";
+                return "./images/0000.png";
             } else {
-                return "/images/0028.png";
+                return "./images/0028.png";
             }
         },
         clickAreas: [{
@@ -49,7 +49,7 @@ const pages = {
         },],
     },
     "start-reverse": {
-        getImageURL: () => "/images/0001.png",
+        getImageURL: () => "./images/0001.png",
         clickAreas: [{
             x: 0,
             y: HEIGHT - 120,
@@ -66,9 +66,9 @@ const pages = {
     "gate": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0002.png";
+                return "./images/0002.png";
             } else {
-                return "/images/0030.png";
+                return "./images/0030.png";
             }
         },
         clickAreas: [{
@@ -92,7 +92,7 @@ const pages = {
         },],
     },
     "gate-left": {
-        getImageURL: () => "/images/0003.png",
+        getImageURL: () => "./images/0003.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -123,7 +123,7 @@ const pages = {
         },],
     },
     "gate-reverse": {
-        getImageURL: () => "/images/0004.png",
+        getImageURL: () => "./images/0004.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -154,7 +154,7 @@ const pages = {
         },],
     },
     "gate-right": {
-        getImageURL: () => "/images/0005.png",
+        getImageURL: () => "./images/0005.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -178,7 +178,7 @@ const pages = {
 
     // Towards toll box
     "toll-outside": {
-        getImageURL: () => "/images/0006.png",
+        getImageURL: () => "./images/0006.png",
         clickAreas: [{
             x: 0,
             y: HEIGHT - 120,
@@ -202,9 +202,9 @@ const pages = {
     "toll-outside-right": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0007.png";
+                return "./images/0007.png";
             } else {
-                return "/images/0035.png";
+                return "./images/0035.png";
             }
         },
         clickAreas: [{
@@ -240,9 +240,9 @@ const pages = {
     "toll-outside-right-open": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0021.png";
+                return "./images/0021.png";
             } else {
-                return "/images/0049.png";
+                return "./images/0049.png";
             }
         },
         clickAreas: [{
@@ -277,9 +277,9 @@ const pages = {
     "toll-outside-reverse": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0008.png";
+                return "./images/0008.png";
             } else {
-                return "/images/0036.png";
+                return "./images/0036.png";
             }
         },
         clickAreas: [{
@@ -317,9 +317,9 @@ const pages = {
     "toll-inside": {
         getImageURL: () => {
             if (gateClosed) {
-                return "/images/0009.png";
+                return "./images/0009.png";
             } else {
-                return "/images/0037.png";
+                return "./images/0037.png";
             }
         },
         clickAreas: [{
@@ -352,7 +352,7 @@ const pages = {
         },],
     },
     "toll-inside-left": {
-        getImageURL: () => "/images/0010.png",
+        getImageURL: () => "./images/0010.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -374,7 +374,7 @@ const pages = {
         },],
     },
     "toll-inside-reverse": {
-        getImageURL: () => "/images/0012.png",
+        getImageURL: () => "./images/0012.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -406,7 +406,7 @@ const pages = {
         },],
     },
     "toll-inside-reverse-open": {
-        getImageURL: () => "/images/0026.png",
+        getImageURL: () => "./images/0026.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -437,7 +437,7 @@ const pages = {
         },],
     },
     "toll-inside-right": {
-        getImageURL: () => "/images/0011.png",
+        getImageURL: () => "./images/0011.png",
         clickAreas: [{
             x: 0,
             y: 0,
@@ -459,7 +459,7 @@ const pages = {
         },],
     },
     "toll-inside-down": {
-        getImageURL: () => "/images/0013.png",
+        getImageURL: () => "./images/0013.png",
         clickAreas: [{
             x: 0,
             y: 0,
