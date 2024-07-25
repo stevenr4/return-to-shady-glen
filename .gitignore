@@ -1,3 +1,23 @@
+
+
+# Don't track raw images
+raw-images/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## TEMPLATE STUFF BELOW THIS
+
 # Logs
 logs
 *.log
