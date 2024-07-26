@@ -29,7 +29,7 @@ const HEIGHT = canvas.height;
 
 // let gameState = "mainScreen";
 
-let showClickAreas = true;
+let showClickAreas = false;
 
 let freezeInputs = false;
 
@@ -37,7 +37,7 @@ let mouseX = 0;
 let mouseY = 0;
 
 let tollGateInput = [0,0,0];
-let gateClosed = false;
+let gateClosed = true;
 
 // TODO: Make a PAGE class
 // TODO: In the page class, make the 'imageURL' a getter that uses game info
