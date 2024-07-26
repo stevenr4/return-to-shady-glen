@@ -15,5 +15,5 @@ for file in raw-images/*; do
         echo "Processing ${file} into ./images/${file_basename}"
         convert "${file}" -depth 8 "images/${file_basename}"
     fi
-    echo " - - - DONE!"
 done
+echo " - - - DONE! "

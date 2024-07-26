@@ -1,10 +1,23 @@
-canvas {
+canvas, img {
     image-rendering: optimizeSpeed;
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-optimize-contrast;
     image-rendering: -o-crisp-edges;
     image-rendering: crisp-edges;
     -ms-interpolation-mode: nearest-neighbor;
+
+
+    -webkit-user-drag: none;
+    user-select: none;
+
+    image-rendering: auto;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+}
+
+html, body {
+    background: gray;
+    font-family: Verdana, sans-serif;
 }
 
 #game-canvas {
@@ -13,4 +26,15 @@ canvas {
     max-width: 100%;
     border: 1px solid black;
     margin: 0 auto;
+    display: block;
+}
+
+#menu {
+    font-size: 26px;
+    background: white;
+    border: 1px solid black;
+}
+
+label {
+    cursor: pointer;
 }

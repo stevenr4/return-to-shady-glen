@@ -3,7 +3,7 @@
 # Don't track raw images
 raw-images/
 
-
+*.DS_Store
 
 
 

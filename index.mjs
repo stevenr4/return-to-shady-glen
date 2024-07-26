@@ -4,18 +4,40 @@ console.log("Running");
 const canvas = document.getElementById("game-canvas");
 const ctx = canvas.getContext("2d");
 
+const showClickAreasCheckbox = document.getElementById("checkbox-show-clickareas");
+console.log(showClickAreasCheckbox);
+showClickAreasCheckbox.addEventListener("change", (e) => {
+    console.log(e.target.checked);
+    showClickAreas = e.target.checked;
+    if (!freezeInputs) {
+        drawFrame();
+    }
+});
+
+const audioFiles = {
+    "outside-birds": new Audio("./sounds/outside-birds.mp3"),
+    "door-wood-close": new Audio("./sounds/door-wood-close.mp3"),
+    "door-wood-open": new Audio("./sounds/door-wood-open.mp3"),
+    "motor-outside-gate": new Audio("./sounds/motor-outside-gate.mp3"),
+    "button-large": new Audio("./sounds/button-large.mp3"),
+    "button-small": new Audio("./sounds/button-small.mp3"),
+    // "": new Audio("./sounds/.mp3"),
+}
+
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 
+// let gameState = "mainScreen";
+
 let showClickAreas = true;
 
-let transitionTimeRemaining = 0;
+let freezeInputs = false;
 
 let mouseX = 0;
 let mouseY = 0;
 
-
-let gateClosed = true;
+let tollGateInput = [0,0,0];
+let gateClosed = false;
 
 // TODO: Make a PAGE class
 // TODO: In the page class, make the 'imageURL' a getter that uses game info
@@ -27,6 +49,12 @@ const pages = {
             } else {
                 return "./images/0028.png";
             }
+        },
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
         },
         clickAreas: [{
             x: 244,
@@ -42,7 +70,7 @@ const pages = {
             y: HEIGHT - 80,
             width: WIDTH,
             height: 80,
-            cursor: "s-resize",
+            cursor: "alias",
             click: () => {
                 transitionToPage("start-reverse");
             },
@@ -50,12 +78,18 @@ const pages = {
     },
     "start-reverse": {
         getImageURL: () => "./images/0001.png",
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: HEIGHT - 120,
             width: WIDTH,
             height: 120,
-            cursor: "s-resize",
+            cursor: "alias",
             click: () => {
                 transitionToPage("start");
             },
@@ -70,6 +104,12 @@ const pages = {
             } else {
                 return "./images/0030.png";
             }
+        },
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
         },
         clickAreas: [{
             x: 0,
@@ -89,10 +129,27 @@ const pages = {
             click: () => {
                 transitionToPage("gate-right");
             },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 200,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                if (!gateClosed) {
+                    transitionToPage("courtyard");
+                }
+            },
         },],
     },
     "gate-left": {
         getImageURL: () => "./images/0003.png",
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -124,6 +181,12 @@ const pages = {
     },
     "gate-reverse": {
         getImageURL: () => "./images/0004.png",
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -155,6 +218,12 @@ const pages = {
     },
     "gate-right": {
         getImageURL: () => "./images/0005.png",
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -179,12 +248,18 @@ const pages = {
     // Towards toll box
     "toll-outside": {
         getImageURL: () => "./images/0006.png",
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: HEIGHT - 120,
             width: WIDTH,
             height: 120,
-            cursor: "s-resize",
+            cursor: "alias",
             click: () => {
                 transitionToPage("toll-outside-reverse");
             },
@@ -207,6 +282,12 @@ const pages = {
                 return "./images/0035.png";
             }
         },
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -226,13 +307,13 @@ const pages = {
                 transitionToPage("toll-outside-reverse");
             },
         },{
-            x: (WIDTH - 150)/2,
-            y: 0,
-            width: 200,
-            height: HEIGHT,
+            x: (WIDTH/2),
+            y: 30,
+            width: 120,
+            height: HEIGHT - 30,
             cursor: "grab",
             click: () => {
-                // TODO: Sound effect of door opening
+                audioFiles["door-wood-open"].play();
                 transitionToPage("toll-outside-right-open");
             },
         },],
@@ -245,6 +326,12 @@ const pages = {
                 return "./images/0049.png";
             }
         },
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -252,6 +339,7 @@ const pages = {
             height: HEIGHT,
             cursor: "w-resize",
             click: () => {
+                audioFiles["door-wood-close"].play();
                 transitionToPage("toll-outside");
             },
         },{
@@ -261,16 +349,28 @@ const pages = {
             height: HEIGHT,
             cursor: "e-resize",
             click: () => {
+                audioFiles["door-wood-close"].play();
                 transitionToPage("toll-outside-reverse");
             },
         },{
-            x: (WIDTH - 150)/2,
-            y: 0,
-            width: 200,
-            height: HEIGHT,
+            x: (WIDTH/2),
+            y: 30,
+            width: 120,
+            height: HEIGHT - 30,
             cursor: "n-resize",
             click: () => {
+                audioFiles["door-wood-close"].play();
                 transitionToPage("toll-inside");
+            },
+        },{
+            x: (WIDTH/2) - 120,
+            y: 80,
+            width: 110,
+            height: HEIGHT - 80,
+            cursor: "grab",
+            click: () => {
+                audioFiles["door-wood-close"].play();
+                transitionToPage("toll-outside-right");
             },
         },],
     },
@@ -282,12 +382,18 @@ const pages = {
                 return "./images/0036.png";
             }
         },
+        audio: {
+            "outside-birds": {
+                volume: 1.0,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: HEIGHT - 80,
             width: WIDTH,
             height: 80,
-            cursor: "s-resize",
+            cursor: "alias",
             click: () => {
                 transitionToPage("toll-outside");
             },
@@ -296,7 +402,7 @@ const pages = {
             y: 0,
             width: 150,
             height: HEIGHT,
-            cursor: "e-resize",
+            cursor: "w-resize",
             click: () => {
                 transitionToPage("toll-outside-right");
             },
@@ -322,28 +428,34 @@ const pages = {
                 return "./images/0037.png";
             }
         },
+        audio: {
+            "outside-birds": {
+                volume: 0.3,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
-            width: 150,
+            width: 120,
             height: HEIGHT,
             cursor: "w-resize",
             click: () => {
                 transitionToPage("toll-inside-left");
             },
         },{
-            x: WIDTH - 150,
+            x: WIDTH - 120,
             y: 0,
-            width: 150,
+            width: 120,
             height: HEIGHT,
             cursor: "e-resize",
             click: () => {
                 transitionToPage("toll-inside-right");
             },
         },{
-            x: 0,
+            x: 130,
             y: HEIGHT - 120,
-            width: WIDTH,
+            width: WIDTH - 260,
             height: 120,
             cursor: "s-resize",
             click: () => {
@@ -353,6 +465,12 @@ const pages = {
     },
     "toll-inside-left": {
         getImageURL: () => "./images/0010.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.3,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -375,6 +493,12 @@ const pages = {
     },
     "toll-inside-reverse": {
         getImageURL: () => "./images/0012.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.3,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -400,13 +524,19 @@ const pages = {
             height: HEIGHT,
             cursor: "grab",
             click: () => {
-                // TODO: Sound of door opening
+                audioFiles["door-wood-open"].play();
                 transitionToPage("toll-inside-reverse-open");
             },
         },],
     },
     "toll-inside-reverse-open": {
         getImageURL: () => "./images/0026.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.8,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -414,6 +544,7 @@ const pages = {
             height: HEIGHT,
             cursor: "w-resize",
             click: () => {
+                audioFiles["door-wood-close"].play();
                 transitionToPage("toll-inside-right");
             },
         },{
@@ -423,6 +554,7 @@ const pages = {
             height: HEIGHT,
             cursor: "e-resize",
             click: () => {
+                audioFiles["door-wood-close"].play();
                 transitionToPage("toll-inside-left");
             },
         },{
@@ -432,12 +564,19 @@ const pages = {
             height: HEIGHT,
             cursor: "n-resize",
             click: () => {
-                transitionToPage("toll-outside");
+                audioFiles["door-wood-close"].play();
+                transitionToPage("toll-outside-reverse");
             },
         },],
     },
     "toll-inside-right": {
         getImageURL: () => "./images/0011.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.3,
+                loop: true,
+            },
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -460,6 +599,19 @@ const pages = {
     },
     "toll-inside-down": {
         getImageURL: () => "./images/0013.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.2,
+                loop: true,
+            },
+        },
+        renderExtras: () => {
+            ctx.font = "32px serif";
+            ctx.fillStyle = gateClosed ? "#E20" : "#2E0";
+            ctx.fillText(tollGateInput[0], 225, 165);
+            ctx.fillText(tollGateInput[1], 255, 165);
+            ctx.fillText(tollGateInput[2], 285, 165);
+        },
         clickAreas: [{
             x: 0,
             y: 0,
@@ -470,14 +622,518 @@ const pages = {
                 transitionToPage("toll-inside");
             },
         },{
-            x: 240,
+            // BIG RIGHT SIDE BUTTON
+            x: 370,
             y: 135,
             width: 55,
             height: 45,
-            cursor: "grab",
+            cursor: "pointer",
             click: () => {
-                gateClosed = !gateClosed;
-                // TODO Play audio of gate moving
+                audioFiles["button-large"].play();
+                if (tollGateInput[0] == 5 &&
+                    tollGateInput[1] == 7 &&
+                    tollGateInput[2] == 2)
+                {
+                    gateClosed = !gateClosed;
+                    audioFiles["motor-outside-gate"].play();
+                    freezeInputs = true;
+                    canvas.style.cursor = "wait";
+                    drawFrame(false);
+                    audioFiles["motor-outside-gate"].addEventListener("ended", () => {
+                        freezeInputs = false;
+                        drawFrame();
+                    });
+                }
+            },
+        },{
+            // SMALL RIGHT SIDE BUTTON
+            x: 323,
+            y: 145,
+            width: 25,
+            height: 25,
+            cursor: "pointer",
+            click: () => {
+                audioFiles["button-small"].play();
+                if (gateClosed)
+                {
+                    tollGateInput[2] = (tollGateInput[2] + 1) % 10;
+                    tollGateInput[1] = (tollGateInput[1] + 1) % 10;
+                    drawFrame();
+                }
+            },
+        },{
+            // SMALL LEFT SIDE BUTTON
+            x: 178,
+            y: 145,
+            width: 25,
+            height: 25,
+            cursor: "pointer",
+            click: () => {
+                audioFiles["button-small"].play();
+                if (gateClosed)
+                {
+                    tollGateInput[0] = (tollGateInput[0] + 1) % 10;
+                    tollGateInput[1] = (tollGateInput[1] + 1) % 10;
+                    drawFrame();
+                }
+            },
+        },],
+    },
+
+
+
+    // Inside the courtyard behind the gate
+    "courtyard": {
+        getImageURL: () => "./images/0056.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-left");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-right");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("factory-entrance");
+            },
+        },],
+    },
+    "courtyard-left": {
+        getImageURL: () => "./images/0057.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-reverse");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 200,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard");
+            },
+        },],
+    },
+    "courtyard-reverse": {
+        getImageURL: () => "./images/0058.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-right");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-left");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("gate-reverse");
+            },
+        },],
+    },
+    "courtyard-right": {
+        getImageURL: () => "./images/0059.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-reverse");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles");
+            },
+        },],
+    },
+
+
+
+
+
+    // Inside the courtyard behind the gate
+    "courtyard-flagpoles": {
+        getImageURL: () => "./images/0061.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-left");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-right");
+            },
+        },{
+            x: 130,
+            y: 0,
+            width: WIDTH - 260,
+            height: 120,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-up");
+            },
+        },],
+    },
+    "courtyard-flagpoles-left": {
+        getImageURL: () => "./images/0062.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-reverse");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles");
+            },
+        },],
+    },
+    "courtyard-flagpoles-reverse": {
+        getImageURL: () => "./images/0063.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-right");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-left");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("courtyard-left");
+            },
+        },],
+    },
+    "courtyard-flagpoles-right": {
+        getImageURL: () => "./images/0064.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles-reverse");
+            },
+        },],
+    },
+    "courtyard-flagpoles-up": {
+        getImageURL: () => "./images/0060.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: HEIGHT - 120,
+            width: WIDTH,
+            height: 120,
+            cursor: "s-resize",
+            click: () => {
+                transitionToPage("courtyard-flagpoles");
+            },
+        },],
+    },
+
+
+
+    // Inside the courtyard behind the gate
+    "courtyard-puzzleboard": {
+        getImageURL: () => "./images/0065.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-left");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-right");
+            },
+        },],
+    },
+    "courtyard-puzzleboard-left": {
+        getImageURL: () => "./images/0066.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-reverse");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard");
+            },
+        },],
+    },
+    "courtyard-puzzleboard-reverse": {
+        getImageURL: () => "./images/0067.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-right");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-left");
+            },
+        },{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                transitionToPage("courtyard-right");
+            },
+        },],
+    },
+    "courtyard-puzzleboard-right": {
+        getImageURL: () => "./images/0068.png",
+        audio: {
+            "outside-birds": {
+                volume: 0.7,
+                loop: true,
+            },
+        },
+        clickAreas: [{
+            x: 0,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "w-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard");
+            },
+        },{
+            x: WIDTH - 150,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "e-resize",
+            click: () => {
+                transitionToPage("courtyard-puzzleboard-reverse");
+            },
+        }],
+    },
+
+    // Main Factory Entrance
+    "factory-entrance": {
+        getImageURL: () => "./images/0069.png",
+        audio: {
+        },
+        clickAreas: [{
+            x: (WIDTH - 150)/2,
+            y: 0,
+            width: 150,
+            height: HEIGHT,
+            cursor: "n-resize",
+            click: () => {
+                alert("Congrats! You made it to the end of the short work in progress. Feel free to explore elsewhere, there's not much to find.");
+            },
+        },{
+            x: 0,
+            y: HEIGHT - 80,
+            width: WIDTH,
+            height: 80,
+            cursor: "alias",
+            click: () => {
+                transitionToPage("courtyard-reverse");
             },
         },],
     },
@@ -486,6 +1142,7 @@ const pages = {
 
 
 let currentPage = pages["start"];
+// currentPage = pages["toll-inside-down"];
 
 // Render out the current frame
 async function drawFrame(clickAreaOverride = undefined) {
@@ -508,6 +1165,11 @@ async function drawFrame(clickAreaOverride = undefined) {
     // ctx.fillStyle = "#00F";
     // ctx.fillRect(mouseX,mouseY,3,3);
 
+    // Render extra stuff for the scene if necessary
+    if (currentPage?.renderExtras) {
+        currentPage.renderExtras();
+    }
+
     if (internalShowClickAreas) {
         // Render all click areas
         for (let clickArea of currentPage.clickAreas) {
@@ -519,6 +1181,7 @@ async function drawFrame(clickAreaOverride = undefined) {
             }
 
             ctx.fillRect(clickArea.x, clickArea.y, clickArea.width, clickArea.height);
+            ctx.strokeRect(clickArea.x, clickArea.y, clickArea.width, clickArea.height);
         }
     }
 }
@@ -545,17 +1208,47 @@ function setCursorStyle() {
 // Transitions to a new page
 async function transitionToPage(pageID) {
 
+    // Set the cursor to waiting
+    canvas.style.cursor = "wait";
+    freezeInputs = true;
+
     // First, render without click areas
     await drawFrame(false);
 
     // Set the new page
     currentPage = pages[pageID];
 
-    // Set the cursor to waiting
-    canvas.style.cursor = "wait";
+    // Set up audio for new page
+    {
+        // Play all audio in the area
+        for (let audioID in currentPage.audio) {
+            // Get the data for the audio
+            const audioData = currentPage.audio[audioID];
+
+            audioFiles[audioID].volume = audioData.volume;
+            audioFiles[audioID].loop = audioData.loop;
+
+            if (audioFiles[audioID].paused) {
+                audioFiles[audioID].play();
+            }
+        }
+
+        // Stop all looping audio that isn't here
+        for (let audioID in audioFiles) {
+            const audioElement = audioFiles[audioID];
+            if (audioElement.loop &&
+                !audioElement.paused &&
+                !(audioID in currentPage.audio))
+            {
+                audioElement.pause();
+            }
+        }
+    }
 
     // Run the animation
     await transitionAnimationToImage(currentPage.getImageURL());
+
+    freezeInputs = false;
 
     // Finally, set up the game to get going again
     drawFrame();
@@ -565,11 +1258,11 @@ async function transitionToPage(pageID) {
 
 
 
-const IMAGE_BIT_SIZE = 2;
+const IMAGE_BIT_SIZE = 3;
 const TRANSITION_TIME_MS = 200;
 
 async function transitionAnimationToImage(imageURL) {
-    transitionTimeRemaining = TRANSITION_TIME_MS;
+    let transitionTimeRemaining = TRANSITION_TIME_MS;
     const imageToDraw = await imageLib.getOrAddImage(imageURL);
 
     let previousTime = await animationPromise();
@@ -605,7 +1298,6 @@ async function transitionAnimationToImage(imageURL) {
                 x, y, IMAGE_BIT_SIZE, IMAGE_BIT_SIZE);
 
         }
-        console.log(transitionTimeRemaining);
     }
 
     // Just to keep things clean
@@ -629,7 +1321,7 @@ async function transitionAnimationToImage(imageURL) {
 // Input handler
 
 canvas.addEventListener("mousemove", (e) => {
-    if (transitionTimeRemaining > 0) return;
+    if (freezeInputs) return;
     updateMousePositionFromEvent(e);
 
     drawFrame();
@@ -637,7 +1329,7 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mouseleave", (e) => {
-    if (transitionTimeRemaining > 0) return;
+    if (freezeInputs) return;
     mouseX = -100;
     mouseY = -100;
     drawFrame();
@@ -645,7 +1337,7 @@ canvas.addEventListener("mouseleave", (e) => {
 });
 
 canvas.addEventListener("click", (e) => {
-    if (transitionTimeRemaining > 0) return;
+    if (freezeInputs) return;
     updateMousePositionFromEvent(e);
 
     let clickedArea = null;
@@ -674,7 +1366,7 @@ function updateMousePositionFromEvent(e) {
 
     mouseX = Math.floor(normalizedX * WIDTH);
     mouseY = Math.floor(normalizedY * HEIGHT);
-    console.log({mouseX, mouseY});
+    // console.log({mouseX, mouseY});
 }
 
 
@@ -773,8 +1465,16 @@ function shuffleArray(array) {
 
 
 const imageLib = new ImageLibrary();
-console.log(imageLib);
 const foo = await imageLib.getOrAddImage("images/0000.png");
-console.log(foo);
 
 drawFrame();
+
+if (audioFiles["outside-birds"].duration > 0) {
+    audioFiles["outside-birds"].loop = true;
+    // audioFiles["outside-birds"].play();
+} else {
+    audioFiles["outside-birds"].addEventListener("canplaythrough", (e) => {
+        audioFiles["outside-birds"].loop = true;
+        // audioFiles["outside-birds"].play();
+    });
+}
